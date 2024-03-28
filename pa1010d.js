@@ -59,10 +59,12 @@ function sendPMTKPacket(set) {
 };
 
   function format(num, length) {
-  num = num.toString();
-  while (num.length < length) num = '0' + num;
+  if (num != undefined) {
+    num = num.toString();
+     while (num.length < length) num = '0' + num;
   return num;
-  }
+  };
+};
 
 function parse(data) {
   let SentenceStart = data.indexOf('$GNGGA');
@@ -72,33 +74,54 @@ function parse(data) {
   let splitString = GGASentence.split(',');
 //console.log(splitString);
 
-  let time = splitString[1];
-  let hour = parseInt(time.substr(0,2));
-  let minute = parseInt(time.substr(2,2));
-  let seconds = parseInt(time.substr(4,2));
-  let milliseconds = time * 1000;
+  var time = splitString[1];
+  if (time != undefined){
+  var hour = parseInt(time.substr(0,2));
+  var minute = parseInt(time.substr(2,2));
+  var seconds = parseInt(time.substr(4,2));
+  }else{
+    var hour = 0;
+    var minute = 0;
+    var seconds = 0;
+  };
+  var milliseconds = time * 1000;
   
   var latitude = splitString[2];
+  
+  //console.log(latitude);
+  
+  if (latitude != undefined){
   var latDeg = parseInt(latitude.substr(0,2));
   var latMin = parseInt(latitude.substr(2,2));
   var latSek = parseInt(latitude.substr(5,4));
 
+
   let hemisphereLatitude = (splitString[3]);
   
   var longitude = splitString[4];
+  //console.log(longitude);
+
+  if (longitude != undefined){
   var longDeg = parseInt(longitude.substr(0,3));
   var longMin = parseInt(longitude.substr(3,2));
   var longSek = parseInt(longitude.substr(6,4));
+  }
 
-  const hemisphereLongitude = (splitString[5]);
+  let hemisphereLongitude = (splitString[5]);
 
-  const fixquality = parseInt(splitString[6]);
-  const satellites = parseInt(splitString[7]);
-  const HDOP  = parseFloat(splitString[8]);
-  const altitude = parseFloat(splitString[9]);
-  const geoidheight = parseFloat(splitString[11]);
+  let fixquality = parseInt(splitString[6]);
+  var satellites = parseInt(splitString[7]);
+  let HDOP  = parseFloat(splitString[8]);
+  let altitude = parseFloat(splitString[9]);
+  let geoidheight = parseFloat(splitString[11]);
 
 
+  console.log(
+    "\x1b[0m",'Zeit UTC: ',format(hour,2),':',format(minute,2),':',format(seconds,2),'\n',
+    'Anzahl der Satelliten:',satellites,'\n',
+    'Lat:', format(latDeg,2),'\u00B0',format(latMin,2),'\u0027',format(latSek,4),'\u0027\u0027',hemisphereLatitude,'\n',
+    'Long:', format(longDeg,3),'\u00B0',format(longMin,2),'\u0027',format(longSek,4),'\u0027\u0027',hemisphereLongitude,'\n'
+  );
 
   while (fixquality === 0) {
   console.log('\x1b[31m','Warten auf Fix!','\n');
@@ -130,14 +153,15 @@ function parse(data) {
   break;
   };
 
-  console.log("\x1b[0m",'Zeit UTC: ',format(hour,2),':',format(minute,2),':',format(seconds,2));
-  console.log('Anzahl der Satelliten:',satellites);
+  //console.log("\x1b[0m",'Zeit UTC: ',format(hour,2),':',format(minute,2),':',format(seconds,2));
+  //console.log('Anzahl der Satelliten:',satellites);
 
 //console.log(longitude);
 
-  console.log('Lat:', format(latDeg,2),'\u00B0',format(latMin,2),'\u0027',format(latSek,4),'\u0027\u0027',hemisphereLatitude);
-  console.log('Long:', format(longDeg,3),'\u00B0',format(longMin,2),'\u0027',format(longSek,4),'\u0027\u0027',hemisphereLongitude,'\n');
+  //console.log('Lat:', format(latDeg,2),'\u00B0',format(latMin,2),'\u0027',format(latSek,4),'\u0027\u0027',hemisphereLatitude);
+  //console.log('Long:', format(longDeg,3),'\u00B0',format(longMin,2),'\u0027',format(longSek,4),'\u0027\u0027',hemisphereLongitude,'\n');
 }; 
+};
 
 
 
@@ -151,12 +175,12 @@ function readGPSData() {
       console.error('Error reading data:', err);
       } else {
       var data = buffer.toString('utf8', 0, bytesRead);
-      var index = data.indexOf("$");
-      if (index !== -1) {
+    //  var index = data.indexOf("$");
+    //  if (index !== -1) {
         parse(data);
-    }else{
-      return;
-      };
+    //}else{
+    //  return;
+    //  };
       };
   }); 
 };
