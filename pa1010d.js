@@ -84,27 +84,34 @@ function parse(data) {
     var minute = 0;
     var seconds = 0;
   };
+
   var milliseconds = time * 1000;
   
-  var latitude = splitString[2];
+  var latitude = splitString[2];  // Latitude: DD° MM' .MMMM
   
   //console.log(latitude);
   
   if (latitude != undefined){
   var latDeg = parseInt(latitude.substr(0,2));
   var latMin = parseInt(latitude.substr(2,2));
-  var latSek = parseInt(latitude.substr(5,4));
-
+  var latSek = (parseInt(latitude.substr(5,4)))*0.006;
+  var latDez = (parseFloat(latitude.substr(2,7)))/60+latDeg; 
+  var latGM = parseFloat(latitude.substr(2,7));
+  };
 
   let hemisphereLatitude = (splitString[3]);
   
+  
+
   var longitude = splitString[4];
   //console.log(longitude);
 
   if (longitude != undefined){
   var longDeg = parseInt(longitude.substr(0,3));
   var longMin = parseInt(longitude.substr(3,2));
-  var longSek = parseInt(longitude.substr(6,4));
+  var longSek = (parseInt(longitude.substr(6,4)))*0.006;
+  var longDez = (parseFloat(longitude.substr(3,7)))/60+longDeg; 
+  var longGM = parseFloat(longitude.substr(3,7));
   }
 
   let hemisphereLongitude = (splitString[5]);
@@ -115,20 +122,22 @@ function parse(data) {
   let altitude = parseFloat(splitString[9]);
   let geoidheight = parseFloat(splitString[11]);
 
-
-  console.log(
-    "\x1b[0m",'Zeit UTC: ',format(hour,2),':',format(minute,2),':',format(seconds,2),'\n',
+  if (latitude != undefined && longitude != undefined){ console.log(splitString,'\n\n',
+    "\x1b[0m",'GPS Zeitstempel: ',format(hour,2),':',format(minute,2),':',format(seconds,2),'\n',
     'Anzahl der Satelliten:',satellites,'\n',
     'Lat:', format(latDeg,2),'\u00B0',format(latMin,2),'\u0027',format(latSek,4),'\u0027\u0027',hemisphereLatitude,'\n',
-    'Long:', format(longDeg,3),'\u00B0',format(longMin,2),'\u0027',format(longSek,4),'\u0027\u0027',hemisphereLongitude,'\n'
-  );
-
+    'Dezimal Latitude:',latDez,'\n',
+    'Grad Minute Latitude:',latDeg,'\u00B0',latGM,'\n',
+    'Long:', format(longDeg,3),'\u00B0',format(longMin,2),'\u0027',format(longSek,4),'\u0027\u0027',hemisphereLongitude,'\n',
+    'Dezimal Longitude:',longDez,'\n',
+    'Grad Minute Longitude:',longDeg,'\u00B0',longGM,'\n'
+  );};
   while (fixquality === 0) {
   console.log('\x1b[31m','Warten auf Fix!','\n');
   break;
   };
 
-  while (data.includes('PMTK001',5) )  {
+  while (data.includes('PMTK001') )  {
   let SentenceStart = data.indexOf('$PMTK');
   let SentenceEnd = data.indexOf('*',SentenceStart);
   let Sentence = data.slice(SentenceStart,SentenceEnd);
@@ -148,7 +157,7 @@ function parse(data) {
     case 3:
       var PMTK_ACK = 'valid, and action succeeded';
       break;
-  }
+  };
   console.log('\x1b[32m','Der Befehl:',PacketType,'wurde',PMTK_ACK,' ausgeführt.');
   break;
   };
@@ -161,7 +170,6 @@ function parse(data) {
   //console.log('Lat:', format(latDeg,2),'\u00B0',format(latMin,2),'\u0027',format(latSek,4),'\u0027\u0027',hemisphereLatitude);
   //console.log('Long:', format(longDeg,3),'\u00B0',format(longMin,2),'\u0027',format(longSek,4),'\u0027\u0027',hemisphereLongitude,'\n');
 }; 
-};
 
 
 
@@ -185,7 +193,7 @@ function readGPSData() {
   }); 
 };
 
-//Bestätigung eines Commands abwarten
+  /*//Bestätigung eines Commands abwarten
 function wait4ack() {
   readGPSData();
   while ( (count < 100) || ( data.includes('001',5) && PMTK_SET.slice(5,8)===data.slice(9,12) && data.slice(13,14)==='3' ) ) {
@@ -194,7 +202,7 @@ function wait4ack() {
   count ++;
   delay(1000);
   };
-  /*
+
   do {
   i2cBus.i2cRead(DEVICE_ADDRESS, buffer.length, buffer, (err, bytesRead, buffer) => {
     if (err) {
@@ -209,8 +217,8 @@ function wait4ack() {
   });
 } while (data.includes('001',5)&&(PMTK_SET.slice(5,8)===data.slice(9,12))&&(data.slice(13,14)==='3'))
 {  console.log('Wahr wohl nix!') };
-*/
-};
+
+};*/
 
 // Check of NMEA Sentence Checksum wthout $ and *
 function chksum(nmea) {
@@ -225,7 +233,7 @@ function chksum(nmea) {
       cs = ("00" + cs).slice(-2);
     }
   console.log(cs);
-}
+};
 
 // Close I2C connection when done
 process.on('SIGINT', () => {
